@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>আইডিয়াল ল্যাবজোন & ইমেজিং সেন্টার</title>
+  <style>
+    * { box-sizing: border-box; transition: 0.3s ease; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: linear-gradient(to right, #e0f7fa, #e8f5e9);
+    }
+    header {
+      text-align: center;
+      background: #2e7d32;
+      color: white;
+      padding: 25px;
+      font-size: 30px;
+      font-weight: bold;
+      letter-spacing: 1.5px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      padding: 25px;
+    }
+    label { font-weight: bold; margin-top: 15px; display: block; }
+    input, select {
+      width: 100%; padding: 10px;
+      margin: 8px 0 20px;
+      border: 1px solid #ccc; border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      background: #4CAF50; color: white;
+      border: none; padding: 12px 20px;
+      border-radius: 10px; cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover { background: #388e3c; transform: scale(1.05); }
+
+    .test-entry {
+      display: flex; gap: 10px;
+      flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .test-entry input {
+      flex: 1;
+      font-size: 16px;
+    }
+
+    ul.test-list {
+      list-style: none; padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    ul.test-list li {
+      background: #f1f8e9;
+      border: 2px solid #aed581;
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 600;
+      font-size: 16px;
+      user-select: none;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    ul.test-list li.selected {
+      background: #81c784;
+      color: white;
+    }
+
+    .selected-test-list {
+      padding-left: 20px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .receipt {
+      margin-top: 30px;
+      background: #fefefe;
+      padding: 25px;
+      border: 1px dashed #ccc;
+      border-radius: 10px;
+      display: none;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+    .receipt h3 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 28px;
+      font-weight: bold;
+      border-bottom: 2px solid #2e7d32;
+      padding-bottom: 10px;
+    }
+    .receipt .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .receipt .row span:first-child {
+      font-weight: 700;
+      color: #2e7d32;
+    }
+
+    @media print {
+      button, .test-entry, .test-list, form { display: none; }
+      .container { box-shadow: none; padding: 10px; }
+      .receipt { border: none; background: #fff; color: black; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>আইডিয়াল ল্যাবজোন & ইমেজিং সেন্টার</header>
+
+  <div class="container">
+    <form id="patientForm">
+      <label>রোগীর নাম:</label>
+      <input type="text" id="patientName" required />
+
+      <label>বয়স:</label>
+      <input type="number" id="age" min="0" required />
+
+      <label>লিঙ্গ:</label>
+      <select id="gender" required>
+        <option value="পুরুষ">পুরুষ</option>
+        <option value="মহিলা">মহিলা</option>
+      </select>
+
+      <label>মোবাইল নম্বর:</label>
+      <input type="tel" id="phone" placeholder="01XXXXXXXXX" pattern="01[3-9][0-9]{8}" required />
+
+      <label>জমা টাকা:</label>
+      <input type="number" id="paidAmount" min="0" required />
+
+      <h4>নতুন টেস্ট যোগ করুন:</h4>
+      <div class="test-entry">
+        <input type="text" id="newTestName" placeholder="টেস্টের নাম" />
+        <input type="number" id="newTestCost" placeholder="দাম (৳)" />
+        <button type="button" onclick="addTest()">➕ যোগ করুন</button>
+      </div>
+
+      <h4>পরীক্ষা তালিকা:</h4>
+      <ul class="test-list" id="testList"></ul>
+
+      <h4>নির্বাচিত পরীক্ষা:</h4>
+      <ul class="selected-test-list" id="selectedTests"></ul>
+      <p><strong>মোট খরচ:</strong> ৳<span id="totalCost">0</span></p>
+
+      <button type="submit">✅ রিসিট জেনারেট করুন</button>
+    </form>
+
+    <div class="receipt" id="receipt">
+      <h3>আইডিয়াল ল্যাবজোন & ইমেজিং সেন্টার</h3>
+      <div class="row"><span>তারিখ:</span> <span id="recDate"></span></div>
+      <div class="row"><span>রিসিট নং:</span> <span id="recSerial"></span></div>
+      <div class="row"><span>নাম:</span> <span id="recPatientName"></span></div>
+      <div class="row"><span>বয়স:</span> <span id="recAge"></span></div>
+      <div class="row"><span>লিঙ্গ:</span> <span id="recGender"></span></div>
+      <div class="row"><span>মোবাইল:</span> <span id="recPhone"></span></div>
+      <div class="row"><span>পরীক্ষা:</span> <span id="recExamCost"></span> ৳</div>
+      <div class="row"><span>জমা:</span> <span id="recPaidAmount"></span> ৳</div>
+      <div class="row"><span>বাকি:</span> <span id="recRemainingAmount"></span> ৳</div>
+      <br />
+      <button onclick="printAndReload()">🖨️ প্রিন্ট করুন</button>
+    </div>
+  </div>
+
+  <script>
+    const testList = document.getElementById('testList');
+    const selectedTestsElement = document.getElementById('selectedTests');
+    const totalCostElement = document.getElementById('totalCost');
+    let selectedTests = [];
+    let totalCost = 0;
+    let receiptSerial = localStorage.getItem('receiptSerial') || 1;
+
+    function addTest() {
+      const name = document.getElementById('newTestName').value.trim();
+      const cost = parseFloat(document.getElementById('newTestCost').value);
+
+      if (!name || isNaN(cost) || cost <= 0) {
+        alert("সঠিক টেস্টের নাম ও দাম লিখুন");
+        return;
+      }
+
+      // Prevent duplicate tests in test list
+      const existing = [...testList.children].some(li => li.dataset.name === name);
+      if (existing) {
+        alert("এই টেস্টটি ইতিমধ্যে তালিকায় রয়েছে");
+        return;
+      }
+
+      const li = document.createElement('li');
+      li.textContent = `${name} - ৳${cost.toFixed(2)}`;
+      li.dataset.name = name;
+      li.dataset.cost = cost;
+      li.addEventListener('click', toggleTest);
+      testList.appendChild(li);
+
+      // Clear inputs
+      document.getElementById('newTestName').value = '';
+      document.getElementById('newTestCost').value = '';
+    }
+
+    function toggleTest(e) {
+      const item = e.target;
+      const name = item.dataset.name;
+      const cost = parseFloat(item.dataset.cost);
+
+      if (!item.classList.contains('selected')) {
+        item.classList.add('selected');
+        selectedTests.push({ name, cost });
+      } else {
+        item.classList.remove('selected');
+        selectedTests = selectedTests.filter(test => test.name !== name);
+      }
+
+      totalCost = selectedTests.reduce((sum, test) => sum + test.cost, 0);
+      totalCostElement.textContent = totalCost.toFixed(2);
+
+      // Update selected test list UI
+      selectedTestsElement.innerHTML = '';
+      selectedTests.forEach(test => {
+        const li = document.createElement('li');
+        li.textContent = `${test.name} - ৳${test.cost.toFixed(2)}`;
+        selectedTestsElement.appendChild(li);
+      });
+    }
+
+    document.getElementById('patientForm').addEventListener('submit', e => {
+      e.preventDefault();
+      if (selectedTests.length === 0) {
+        alert("কমপক্ষে একটি টেস্ট নির্বাচন করুন!");
+        return;
+      }
+
+      const patientName = document.getElementById('patientName').value;
+      const age = document.getElementById('age').value;
+      const gender = document.getElementById('gender').value;
+      const phone = document.getElementById('phone').value;
+      const paidAmount = parseFloat(document.getElementById('paidAmount').value);
+      const remaining = totalCost - paidAmount;
+
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('bn-BD', {
+        year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+
+      document.getElementById('recDate').textContent = dateStr;
+      document.getElementById('recSerial').textContent = receiptSerial.toString().padStart(4, '0');
+      document.getElementById('recPatientName').textContent = patientName;
+      document.getElementById('recAge').textContent = age;
+      document.getElementById('recGender').textContent = gender;
+      document.getElementById('recPhone').textContent = phone;
+      document.getElementById('recExamCost').textContent = totalCost.toFixed(2);
+      document.getElementById('recPaidAmount').textContent = paidAmount.toFixed(2);
+
+      let remainingText = remaining.toFixed(2);
+      if (remaining < 0) remainingText += " (অতিরিক্ত জমা)";
+      else if (remaining > 0) remainingText += " (বাকি)";
+      document.getElementById('recRemainingAmount').textContent = remainingText;
+
+      // Increase serial and store in localStorage
+      receiptSerial++;
+      localStorage.setItem('receiptSerial', receiptSerial);
+
+      document.getElementById('patientForm').style.display = 'none';
+      document.getElementById('receipt').style.display = 'block';
+      document.getElementById('receipt').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    function printAndReload() {
+      window.print();
+      setTimeout(() => location.reload(), 1000);
+    }
+  </script>
+</body>
+</html>
